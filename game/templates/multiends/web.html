@@ -1,0 +1,20 @@
+{% load static %}
+<head>
+	<!-- <link rel="stylesheet" href="https://app165.acapp.acwing.com.cn/static/css/jquery-ui.min.css">
+	<script src="https://app165.acapp.acwing.com.cn/static/js/jquery-3.3.1.min.js"></script> -->
+	<link rel="stylesheet" type="text/css" href="{% static 'css/jquery-ui.min.css' %}">
+	<script type="text/javascript" src="{% static 'js/dist/jquery-3.3.1.min.js' %}"></script>
+
+	<link rel="stylesheet" type="text/css" href="{% static 'css/game.css' %}">
+	<!-- <script type="text/javascript" src="{% static 'js/dist/game.js' %}"></script> -->
+</head>
+<body style="margin:0">
+	<div id="ball_game_12345678"></div>
+	<script type="module">
+		import {BallGame} from "{% static 'js/dist/game.js' %}"
+
+		$(document).ready(function(){
+			let ball_game=new BallGame("ball_game_12345678");
+		})
+	</script>
+</body>
