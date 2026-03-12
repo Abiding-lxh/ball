@@ -13,11 +13,12 @@ class BallGameMenu{
 				</div>
 			<br>
 				<div class="ball-game-menu-field-item ball-game-menu-field-item-settings">
-				设置
+				退出
 				</div>
 			</div>
 		</div>
 		`)
+		this.$menu.hide();
 		this.root.$ball_game.append(this.$menu);
 		this.$single_mode=this.$menu.find('.ball-game-menu-field-item-single-mode');
 		this.$multi_mode=this.$menu.find('.ball-game-menu-field-item-multi-mode');
@@ -39,7 +40,7 @@ class BallGameMenu{
 			console.log("click multi mode")
 		})
 		this.$settings.click(function(){
-			console.log("click settings");
+			outer.root.settings.logout_on_remote();
 		})
 	}
 	show(){

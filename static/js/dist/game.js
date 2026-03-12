@@ -13,11 +13,12 @@ class BallGameMenu{
 				</div>
 			<br>
 				<div class="ball-game-menu-field-item ball-game-menu-field-item-settings">
-				设置
+				退出
 				</div>
 			</div>
 		</div>
 		`)
+		this.$menu.hide();
 		this.root.$ball_game.append(this.$menu);
 		this.$single_mode=this.$menu.find('.ball-game-menu-field-item-single-mode');
 		this.$multi_mode=this.$menu.find('.ball-game-menu-field-item-multi-mode');
@@ -39,7 +40,7 @@ class BallGameMenu{
 			console.log("click multi mode")
 		})
 		this.$settings.click(function(){
-			console.log("click settings");
+			outer.root.settings.logout_on_remote();
 		})
 	}
 	show(){
@@ -140,6 +141,10 @@ class GameMap extends BallGameObject{
 		this.spend_time=0;
 
 		this.cur_skill=null;
+		if(this.is_me){
+			this.img=new Image();
+			this.img.src=this.playground.root.settings.photo;
+		}
 	}
 	start(){
 		if(this.is_me){
@@ -157,11 +162,12 @@ class GameMap extends BallGameObject{
 			return false;
 		});
 		this.playground.game_map.$canvas.mousedown(function(e){
+			const rect=outer.ctx.canvas.getBoundingClientRect();
 			if(e.which===3){
-				outer.move_to(e.clientX,e.clientY);
+				outer.move_to(e.clientX-rect.left,e.clientY-rect.top);
 			}else if(e.which===1){
 				if(outer.cur_skill==="fireball"){
-					outer.shoot_fireball(e.clientX,e.clientY);
+					outer.shoot_fireball(e.clientX-rect.left,e.clientY-rect.top);
 				}
 				outer.cur_skill=null;
 			}
@@ -241,10 +247,20 @@ class GameMap extends BallGameObject{
 		this.render();
 	}
 	render(){
-		this.ctx.beginPath();
-		this.ctx.arc(this.x,this.y,this.radius,0,Math.PI*2,false);
-		this.ctx.fillStyle=this.color;
-		this.ctx.fill();
+		if(this.is_me){
+			this.ctx.save();
+			this.ctx.beginPath();
+			this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+			this.ctx.stroke();
+			this.ctx.clip();
+			this.ctx.drawImage(this.img, this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2); 
+			this.ctx.restore();
+		}else{
+			this.ctx.beginPath();
+			this.ctx.arc(this.x,this.y,this.radius,0,Math.PI*2,false);
+			this.ctx.fillStyle=this.color;
+			this.ctx.fill();
+		}
 	}
 	on_destroy(){
 		for(let i=0;i<this.playground.players.length;i++){
@@ -357,10 +373,225 @@ class GameMap extends BallGameObject{
 	hide(){	//close playground
 		this.$playground.hide();
 	}
+}class Settings{
+	constructor(root){
+		this.root=root;
+		this.platform="web";
+		if(this.root.BallOS)this.platform="app";
+		this.username="";
+		this.photo="";
+
+
+		this.$settings=$(`
+<div class="ball-game-settings">
+	<div class="ball-game-settings-login">
+		<div class="ball-game-settings-title">
+			登录
+		</div>
+		<div class="ball-game-settings-username">
+			<div class="ball-game-settings-item">
+				<input type="text" placeholder="用户名">
+			</div>
+		</div>
+		<div class="ball-game-settings-password">
+			<div class="ball-game-settings-item">
+				<input type="password" placeholder="密码">
+			</div>
+		</div>
+		<div class="ball-game-settings-submit">
+			<div class="ball-game-settings-item">
+				<button>登录</button>
+			</div>
+		</div>
+		<div class="ball-game-settings-error-message">
+			
+		</div>
+		<div class="ball-game-settings-option">
+			注册
+		</div>
+	</div>
+	<div class="ball-game-settings-register">
+		<div class="ball-game-settings-title">
+			注册
+		</div>
+		<div class="ball-game-settings-username">
+			<div class="ball-game-settings-item">
+				<input type="text" placeholder="用户名">
+			</div>
+		</div>
+		<div class="ball-game-settings-password ball-game-settings-password-first">
+			<div class="ball-game-settings-item">
+				<input type="password" placeholder="密码">
+			</div>
+		</div>
+		<div class="ball-game-settings-password ball-game-settings-password-second">
+			<div class="ball-game-settings-item">
+				<input type="password" placeholder="确认密码">
+			</div>
+		</div>
+		<div class="ball-game-settings-submit">
+			<div class="ball-game-settings-item">
+				<button>注册</button>
+			</div>
+		</div>
+		<div class="ball-game-settings-error-message">
+			
+		</div>
+		<div class="ball-game-settings-option">
+			登录
+		</div>
+	</div>
+</div>
+`)
+		this.$login=this.$settings.find(".ball-game-settings-login");
+		this.$login_username=this.$login.find(".ball-game-settings-username input");
+		this.$login_password=this.$login.find(".ball-game-settings-password input");
+		this.$login_submit=this.$login.find(".ball-game-settings-submit button");
+		this.$login_error_message=this.$login.find(".ball-game-settings-error-message");
+		this.$login_register=this.$login.find(".ball-game-settings-option");
+		this.$login.hide();
+
+		this.$register=this.$settings.find(".ball-game-settings-register");
+		this.$register_username=this.$register.find(".ball-game-settings-username input");
+		this.$register_password=this.$register.find(".ball-game-settings-password-first input");
+		this.$register_password_confirm=this.$register.find(".ball-game-settings-password-second input");
+		this.$register_submit=this.$register.find(".ball-game-settings-submit button");
+		this.$register_error_message=this.$register.find(".ball-game-settings-error-message");
+		this.$register_login=this.$register.find(".ball-game-settings-option");
+		this.$register.hide();
+		this.root.$ball_game.append(this.$settings);
+
+		this.start();
+	}
+	start(){
+		this.getinfo();
+		this.add_listening_events();
+	}
+	add_listening_events(){
+		this.add_listening_events_login();
+		this.add_listening_events_register();
+	}
+	add_listening_events_login(){
+		let outer=this;
+		this.$login_register.click(function(){
+			outer.register();
+		})
+		this.$login_submit.click(function(){
+			outer.login_on_remote();
+		})
+	}
+	add_listening_events_register(){
+		let outer=this;
+		this.$register_login.click(function(){
+			outer.login();
+		})
+		this.$register_submit.click(function(){
+			outer.register_on_remote();
+		})
+	}
+	login_on_remote(){
+		let outer=this;
+		let username=this.$login_username.val();
+		let password=this.$login_password.val();
+		this.$login_error_message.empty();
+		$.ajax({
+			url:"https://ball.abiding.cn/settings/login/",
+			type:"get",
+			data:{
+				username:username,
+				password:password
+			},
+			success:function(resp){
+				console.log(resp)
+				if(resp.result==="success"){
+					location.reload();
+				}else{
+					outer.$login_error_message.html(resp.result);
+				}
+			}
+		})
+	}
+	register_on_remote(){
+		let outer=this;
+		let username=this.$register_username.val();
+		let password=this.$register_password.val();
+		let password_confirm=this.$register_password_confirm.val();
+		this.$register_password_confirm.empty();
+
+		$.ajax({
+			url:"https://ball.abiding.cn/settings/register",
+			type:"get",
+			data:{
+				username:username,
+				password:password,
+				password_confirm:password_confirm
+			},
+			success:function(resp){
+				console.log(resp)
+				if(resp.result==="success"){
+					location.reload();
+				}else{
+					outer.$register_error_message.html(resp.result);
+				}
+			}
+		})
+	}
+	logout_on_remote(){
+		$.ajax({
+			url:"https://ball.abiding.cn/settings/logout/",
+			type:"get",
+			success:function(resp){
+				console.log(resp);
+				if(resp.result==="success"){
+					location.reload();
+				}
+			}
+		})
+	}
+
+	register(){
+		this.$login.hide();
+		this.$register.show();
+	}
+	login(){
+		this.$register.hide();
+		this.$login.show();
+	}
+
+	getinfo(){
+		let outer=this;
+		$.ajax({
+			url:"https://ball.abiding.cn/settings/getinfo/",
+			type:"get",
+			data:{
+				platform:outer.platform
+			},
+			success:function(resp){
+				console.log(resp)
+				if(resp.result==="success"){
+					outer.username=resp.username;
+					outer.photo=resp.photo;
+					outer.hide();
+					outer.root.menu.show();
+				}else{
+					outer.login();
+					// outer.register();
+				}
+			}
+		})
+	}
+	hide(){
+		this.$settings.hide();
+	}
+	show(){
+		this.$settings.show();
+	}
 }export class BallGame{
-	constructor(id){
+	constructor(id,BallOS){
 		this.id=id;
 		this.$ball_game=$('#'+id);
+		this.BallOS=BallOS;
+		this.settings=new Settings(this);
 		this.menu=new BallGameMenu(this);
 		this.playground =new BallGamePlayground(this);
 
